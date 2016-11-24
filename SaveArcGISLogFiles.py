@@ -1,6 +1,10 @@
 '''
 By default, the ArcGIS license server log files are over-written every day. This script extracts the important
-information from the log files, such that they can be analysed and patterns discerned, etc.
+information from the log files (namely the date and time that each license was checked out/in, and by which user),
+such that the license usage can be analysed and patterns discerned, etc.
+
+The outputs are stored in a PostGreSQL table, but any other database would suffice. A database is preferable to a
+text file as it's easier to query for existing entries, to avoid creating duplicate entries.
 
 This script should be run regularly as a scheduled task to avoid losing information when the log file is over-written.
 
@@ -79,7 +83,8 @@ for licenseServer in licenseServers:
                 username = tokens[4]
 
                 # Ignore results within +/- 10 seconds of this one, to avoid duplication
-                actiondate = datetime.datetime.strptime(str(date.month) + "/" + str(date.day) + "/" + str(date.year) + " " + time, '%m/%d/%Y %H:%M:%S')
+                actiondate = datetime.datetime.strptime(str(date.month) + "/" + str(date.day) + "/" + str(date.year)
+                    + " " + time, '%m/%d/%Y %H:%M:%S')
                 beforedate = str(actiondate - datetime.timedelta(seconds=10))
                 afterdate = str(actiondate + datetime.timedelta(seconds=10))
 
@@ -90,7 +95,9 @@ for licenseServer in licenseServers:
                 cursor.execute(query)
                 recordExists = (cursor.rowcount > 0)
                 if not recordExists:
-                    SQL = "INSERT INTO " + dbTable + " (servername, action_date, action_time, license, action, username) VALUES (%s, %s, %s, %s, %s, %s);"
+                    SQL = "INSERT INTO " + dbTable
+                    SQL += " (servername, action_date, action_time, license, action, username) "
+                    SQL += "VALUES (%s, %s, %s, %s, %s, %s);"
                     data = (serverName, actiondate, time, license, action, username)
                     cursor.execute(SQL, data)
                     conn.commit()
