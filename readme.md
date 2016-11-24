@@ -19,3 +19,6 @@ Before running this script:
    - license (text)
    - action (text)
    - username (text)
+
+####Sample output
+![sample output](screenshot.png "Sample output")
